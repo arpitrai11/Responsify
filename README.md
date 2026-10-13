@@ -24,6 +24,45 @@ Responsify provides a full-screen responsive studio workspace with **every featu
 
 ---
 
+## ✨ Features Overview
+
+### 📱 1. Multi-Device Responsive Studio
+- **Infinite Canvas Workspace**: Freely drag, pan, and arrange devices side-by-side with no screen constraints.
+- **Pick & Move Screens**: Grab the drag handle (`:::`) on any device card header to reposition screens anywhere on the canvas.
+- **Select & Hand Pan Tools**: Toggle between the **Select Tool** (to move devices) and the **Hand Tool** (to pan the canvas). Also supports Middle Mouse Button or `Space + Click Drag`.
+- **Synchronized Scrolling**: Scroll one device and all other devices scroll together in real time.
+- **`Ctrl + Scroll` Interior Scrolling**: Hover over any device frame and use `Ctrl + Mouse Wheel` to scroll the inner page smoothly.
+- **100% Crisp Native Rendering**: One-click toggle locks zoom to 1:1 native resolution with font antialiasing and subpixel sharpness, eliminating CSS downsampling blur.
+- **Orientation Flipping**: Rotate individual devices or all active viewports between Portrait and Landscape with one click.
+- **Device Preset Library**: Comprehensive catalog of popular devices across **Mobile**, **Tablet**, **Laptop**, and **Desktop** (iPhone 16 Pro, iPad Pro, MacBook 16", 4K Displays, etc.).
+- **Auto-Align Grid**: One-click button to reset device positions into a clean, organized canvas layout.
+
+### 🎨 2. Visual Modes & Accessibility Testing
+- **Adaptive Column Grid**: Overlay responsive 4, 8, 12, or 16-column grids directly over active viewports with customizable margins, gutters, opacity, and dashed color guides.
+- **Color Blindness Simulator**: Test accessibility using real-time SVG matrix filters:
+  - 👁️ **Protanopia** (Red-weak)
+  - 👁️ **Deuteranopia** (Green-weak)
+  - 👁️ **Tritanopia** (Blue-weak)
+  - 👁️ **Achromatopsia** (Complete color blindness / monochrome)
+- **Dark Theme Simulation**: Instant contrast and dark-mode simulation filter to preview readability in low-light environments.
+- **X-Ray Structural Wireframe**: Reveals structural bounds, flexbox containers, and CSS grid lines to quickly diagnose layout shifting and overflow issues.
+
+### 🛠️ 3. Built-in DevTools & Live Editing Drawer
+- **Live Element Picker**: Interactive crosshair tool to point and click on any element within viewports to inspect its DOM node, tag name, classes, and dimensions.
+- **Interactive Box Model**: Visual representation of Margin, Border, Padding, and Content box dimensions with live inline tweaking.
+- **Live CSS Editor**: Add, modify, or remove CSS properties in real time with instant visual feedback and persistent undo/redo.
+- **Color Inspector & WCAG Contrast Checker**: Automatically calculates color contrast ratios with WCAG AA and AAA compliance badges for accessible typography.
+- **Content & Image Editor**: Edit copy and text directly in the DOM, or swap image source URLs to preview mock content live.
+- **Media Asset Downloader**: Automatically scans and catalogs all SVG vectors, PNG/WebP images, and CSS background assets with one-click downloading.
+- **Change History & Export**: Complete audit trail of all applied CSS, text, and image modifications, exportable as clean CSS rules or JSON.
+
+### 🔓 4. 100% Unlocked Pro Experience
+- **No Feature Locks**: Every single capability is available out of the box.
+- **No Subscriptions**: Zero paywalls, sign-up forms, or disabled "Pro" buttons.
+- **Frame-Busting Bypass**: Built-in `declarativeNetRequest` engine strips `X-Frame-Options` and CSP `frame-ancestors` so any website can be previewed seamlessly.
+
+---
+
 ## 🛠️ Top Bar & Workspace Controls
 
 - **Layout Modes**:
@@ -66,4 +105,4 @@ Run the full test suite with Vitest:
 ```bash
 npm test
 ```
-All 41 tests across 7 test files pass.
+All 42 tests across 7 test files pass.
