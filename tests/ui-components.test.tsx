@@ -195,10 +195,10 @@ describe('React UI Components Suite', () => {
 
   it('renders PreviewWorkspace with Pick & Move, Pan tool, and 100% Crisp toggle', async () => {
     const { PreviewWorkspace } = await import('../src/components/PreviewWorkspace');
-    render(<PreviewWorkspace initialUrl="https://uat.justifi.world" />);
+    render(<PreviewWorkspace initialUrl="https://example.com" />);
 
     // Verify URL bar displays real target URL
-    expect(screen.getByDisplayValue('https://uat.justifi.world')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('https://example.com')).toBeInTheDocument();
 
     // Verify Pan and Select canvas tools exist
     expect(screen.getByTitle('Select Tool: Drag & Reposition Device Screens')).toBeInTheDocument();

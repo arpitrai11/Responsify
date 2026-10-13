@@ -49,7 +49,7 @@ function isRestrictedUrl(url?: string): boolean {
   );
 }
 
-// 1. Direct Extension Action Click (EXACTLY like Pixefy in screen-capture.webm)
+// 1. Direct Extension Action Click
 // Clicking extension toolbar icon immediately launches Responsive Studio with the current site
 if (chrome.action && chrome.action.onClicked) {
   chrome.action.onClicked.addListener(async (tab) => {

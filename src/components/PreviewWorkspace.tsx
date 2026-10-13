@@ -355,7 +355,7 @@ export const PreviewWorkspace: React.FC<PreviewWorkspaceProps> = ({
         canvasTheme === 'dark' ? 'dark bg-slate-950 text-slate-100' : 'bg-[#eef1f6] text-slate-800'
       }`}
     >
-      {/* 1. TOP CONTROL BAR (PIXEFY-STYLE COMPACT WORKSPACE HEADER) */}
+      {/* 1. TOP CONTROL BAR (RESPONSIFY WORKSPACE HEADER) */}
       <header className="h-13 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 flex items-center justify-between gap-3 flex-shrink-0 z-30 shadow-xs">
         {/* Left: Brand Logo & Presets Mode */}
         <div className="flex items-center gap-2">
@@ -475,7 +475,7 @@ export const PreviewWorkspace: React.FC<PreviewWorkspaceProps> = ({
               type="text"
               value={inputUrl}
               onChange={(e) => setInputUrl(e.target.value)}
-              placeholder="Enter URL to test (e.g. https://uat.justifi.world)..."
+              placeholder="Enter URL to test (e.g. https://example.com)..."
               className="w-full pl-8 pr-3 py-1.5 bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-mono text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 transition-colors"
             />
           </div>

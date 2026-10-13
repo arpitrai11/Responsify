@@ -1,18 +1,18 @@
 # Responsify (Responsive Inspector Pro) 🚀
 
-> **Production-grade Chrome Extension for responsive design testing, multi-device viewport inspection, live CSS editing, and visual debugging — inspired by Pixefy.**
+> **Production-grade Chrome Extension for responsive design testing, multi-device viewport inspection, live CSS editing, and visual debugging.**
 
 <p align="center">
   <img src="docs/images/preview.png" alt="Responsify Studio Preview" width="100%" />
 </p>
 
-Responsify replicates the full-screen responsive studio workflow seen in tools like Pixefy, with **every feature 100% unlocked** — no subscription modals, no feature locks, and no paywalls.
+Responsify provides a full-screen responsive studio workspace with **every feature 100% unlocked** — no subscription modals, no feature locks, and no paywalls.
 
 ---
 
-## 🌟 How It Works (Pixefy Workflow)
+## 🌟 How It Works
 
-1. **One-Click Instant Launch**: Click the extension icon in your Chrome toolbar while browsing any webpage (e.g., `uat.justifi.world` or your local development server).
+1. **One-Click Instant Launch**: Click the extension icon in your Chrome toolbar while browsing any webpage (or your local development server).
 2. **Full-Page Studio Opens Automatically**: A new tab opens immediately with the **Responsive Studio Workspace** loaded with your target website.
 3. **Multi-Device Simultaneous Testing**: View your website rendered side-by-side across:
    - 📱 **Mobile** (iPhone 15/16 Pro, Pixel 8, Galaxy S24, etc.)
