@@ -48,6 +48,11 @@ Responsify provides a full-screen responsive studio workspace with **every featu
 - **X-Ray Structural Wireframe**: Reveals structural bounds, flexbox containers, and CSS grid lines to quickly diagnose layout shifting and overflow issues.
 
 ### 🛠️ 3. Built-in DevTools & Live Editing Drawer
+
+<p align="center">
+  <img src="docs/images/inspector.png" alt="DevTools Inspector & Live CSS Drawer" width="100%" />
+</p>
+
 - **Live Element Picker**: Interactive crosshair tool to point and click on any element within viewports to inspect its DOM node, tag name, classes, and dimensions.
 - **Interactive Box Model**: Visual representation of Margin, Border, Padding, and Content box dimensions with live inline tweaking.
 - **Live CSS Editor**: Add, modify, or remove CSS properties in real time with instant visual feedback and persistent undo/redo.
