@@ -1,0 +1,1 @@
+import"./modulepreload-polyfill-B5Qt9EMX.js";typeof chrome<"u"&&chrome.devtools&&chrome.devtools.panels&&chrome.devtools.panels.create("Responsive Pro","icons/icon16.png","devtools-panel.html",e=>{console.log("Responsive Inspector Pro DevTools panel created",e)});
