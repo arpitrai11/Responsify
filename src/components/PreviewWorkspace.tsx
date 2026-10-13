@@ -28,6 +28,8 @@ import {
   LayoutGrid,
 } from 'lucide-react';
 import { InspectorApp } from './InspectorApp';
+import { VisualModesState, DEFAULT_GRID_CONFIG } from '../types/visual-modes';
+import { getStoredVisualModes, saveStoredVisualModes } from '../utils/storage-utils';
 
 interface ActiveDevice {
   instanceId: string;
@@ -55,6 +57,17 @@ export const PreviewWorkspace: React.FC<PreviewWorkspaceProps> = ({
   const [showAddMenu, setShowAddMenu] = useState<boolean>(false);
   const [categoryFilter, setCategoryFilter] = useState<PresetCategory | 'all'>('all');
   const [canvasTool, setCanvasTool] = useState<'select' | 'pan'>('select');
+  const [visualModes, setVisualModes] = useState<VisualModesState>({
+    xrayEnabled: false,
+    gridEnabled: false,
+    gridConfig: DEFAULT_GRID_CONFIG,
+    darkThemeMode: 'disabled',
+    colorBlindness: 'none',
+  });
+
+  useEffect(() => {
+    getStoredVisualModes().then(setVisualModes);
+  }, []);
 
   // Infinite Canvas Pan State
   const [panOffset, setPanOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -355,6 +368,22 @@ export const PreviewWorkspace: React.FC<PreviewWorkspaceProps> = ({
         canvasTheme === 'dark' ? 'dark bg-slate-950 text-slate-100' : 'bg-[#eef1f6] text-slate-800'
       }`}
     >
+      {/* Visual Modes: SVG Color Blindness Filters (Available for all canvas devices) */}
+      <svg className="absolute w-0 h-0 overflow-hidden pointer-events-none" style={{ position: 'absolute', width: 0, height: 0 }}>
+        <filter id="rip-protanopia">
+          <feColorMatrix type="matrix" values="0.567, 0.433, 0, 0, 0   0.558, 0.442, 0, 0, 0   0, 0.242, 0.758, 0, 0   0, 0, 0, 1, 0" />
+        </filter>
+        <filter id="rip-deuteranopia">
+          <feColorMatrix type="matrix" values="0.625, 0.375, 0, 0, 0   0.7, 0.3, 0, 0, 0   0, 0.3, 0.7, 0, 0   0, 0, 0, 1, 0" />
+        </filter>
+        <filter id="rip-tritanopia">
+          <feColorMatrix type="matrix" values="0.95, 0.05, 0, 0, 0   0, 0.433, 0.567, 0, 0   0, 0.475, 0.525, 0, 0   0, 0, 0, 1, 0" />
+        </filter>
+        <filter id="rip-achromatopsia">
+          <feColorMatrix type="matrix" values="0.299, 0.587, 0.114, 0, 0   0.299, 0.587, 0.114, 0, 0   0.299, 0.587, 0.114, 0, 0   0, 0, 0, 1, 0" />
+        </filter>
+      </svg>
+
       {/* 1. TOP CONTROL BAR (RESPONSIFY WORKSPACE HEADER) */}
       <header className="h-13 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 flex items-center justify-between gap-3 flex-shrink-0 z-30 shadow-xs">
         {/* Left: Brand Logo & Presets Mode */}
@@ -744,61 +773,91 @@ export const PreviewWorkspace: React.FC<PreviewWorkspaceProps> = ({
                     <div className="w-8 h-1 rounded-full bg-slate-800" />
                   </div>
 
-                  {/* Responsive Iframe - Razor Crisp Vector Rendering */}
-                  <iframe
-                    ref={(el) => {
-                      if (el) iframeRefs.current.set(device.instanceId, el);
-                      else iframeRefs.current.delete(device.instanceId);
-                    }}
-                    src={url}
-                    title={device.preset.name}
-                    className="bg-white rounded-2xl block border-0 overflow-auto shadow-inner"
-                    style={{
-                      width: `${dims.width}px`,
-                      height: `${dims.height}px`,
-                      // High-resolution antialiased rendering
-                      WebkitFontSmoothing: 'antialiased',
-                      textRendering: 'optimizeLegibility',
-                    }}
-                    onLoad={() => {
-                      // Attach scroll listener when frame loads
-                      const iframe = iframeRefs.current.get(device.instanceId);
-                      if (iframe && iframe.contentWindow) {
-                        try {
-                          iframe.contentWindow.addEventListener('scroll', () => {
-                            if (iframe.contentDocument && iframe.contentDocument.documentElement) {
-                              const doc = iframe.contentDocument.documentElement;
-                              const max = doc.scrollHeight - doc.clientHeight;
-                              const percent = max > 0 ? doc.scrollTop / max : 0;
-                              // Sync to other frames
-                              iframeRefs.current.forEach((otherIframe, otherId) => {
-                                if (otherId !== device.instanceId && otherIframe.contentWindow) {
-                                  try {
-                                    if (otherIframe.contentDocument && otherIframe.contentDocument.documentElement) {
-                                      const otherMax =
-                                        otherIframe.contentDocument.documentElement.scrollHeight -
-                                        otherIframe.contentDocument.documentElement.clientHeight;
-                                      otherIframe.contentWindow.scrollTo({
-                                        top: percent * otherMax,
-                                        behavior: 'auto',
-                                      });
+                  {/* Responsive Screen Container */}
+                  <div className="relative overflow-hidden rounded-2xl">
+                    {/* Visual Mode: Adaptive Column Grid Overlay */}
+                    {visualModes.gridEnabled && (
+                      <div
+                        className="absolute inset-0 pointer-events-none z-20 flex"
+                        style={{
+                          padding: `0 ${visualModes.gridConfig.margin}px`,
+                          gap: `${visualModes.gridConfig.gutter}px`,
+                        }}
+                      >
+                        {Array.from({ length: visualModes.gridConfig.columns }).map((_, cIdx) => (
+                          <div
+                            key={cIdx}
+                            className="flex-1 h-full"
+                            style={{
+                              backgroundColor: visualModes.gridConfig.color,
+                              opacity: visualModes.gridConfig.opacity,
+                              borderLeft: `1px dashed ${visualModes.gridConfig.color}`,
+                              borderRight: `1px dashed ${visualModes.gridConfig.color}`,
+                            }}
+                          />
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Responsive Iframe - Razor Crisp Vector Rendering */}
+                    <iframe
+                      ref={(el) => {
+                        if (el) iframeRefs.current.set(device.instanceId, el);
+                        else iframeRefs.current.delete(device.instanceId);
+                      }}
+                      src={url}
+                      title={device.preset.name}
+                      className="bg-white rounded-2xl block border-0 overflow-auto shadow-inner"
+                      style={{
+                        width: `${dims.width}px`,
+                        height: `${dims.height}px`,
+                        // High-resolution antialiased rendering
+                        WebkitFontSmoothing: 'antialiased',
+                        textRendering: 'optimizeLegibility',
+                        filter: visualModes.colorBlindness !== 'none'
+                          ? `url(#rip-${visualModes.colorBlindness})`
+                          : (visualModes.darkThemeMode === 'simulated' ? 'invert(0.88) hue-rotate(180deg)' : undefined),
+                      }}
+                      onLoad={() => {
+                        // Attach scroll listener when frame loads
+                        const iframe = iframeRefs.current.get(device.instanceId);
+                        if (iframe && iframe.contentWindow) {
+                          try {
+                            iframe.contentWindow.addEventListener('scroll', () => {
+                              if (iframe.contentDocument && iframe.contentDocument.documentElement) {
+                                const doc = iframe.contentDocument.documentElement;
+                                const max = doc.scrollHeight - doc.clientHeight;
+                                const percent = max > 0 ? doc.scrollTop / max : 0;
+                                // Sync to other frames
+                                iframeRefs.current.forEach((otherIframe, otherId) => {
+                                  if (otherId !== device.instanceId && otherIframe.contentWindow) {
+                                    try {
+                                      if (otherIframe.contentDocument && otherIframe.contentDocument.documentElement) {
+                                        const otherMax =
+                                          otherIframe.contentDocument.documentElement.scrollHeight -
+                                          otherIframe.contentDocument.documentElement.clientHeight;
+                                        otherIframe.contentWindow.scrollTo({
+                                          top: percent * otherMax,
+                                          behavior: 'auto',
+                                        });
+                                      }
+                                    } catch {
+                                      otherIframe.contentWindow.postMessage(
+                                        { action: 'SYNC_SCROLL_PERCENT', percent },
+                                        '*'
+                                      );
                                     }
-                                  } catch {
-                                    otherIframe.contentWindow.postMessage(
-                                      { action: 'SYNC_SCROLL_PERCENT', percent },
-                                      '*'
-                                    );
                                   }
-                                }
-                              });
-                            }
-                          });
-                        } catch {
-                          // Cross-origin protected
+                                });
+                              }
+                            });
+                          } catch {
+                            // Cross-origin protected
+                          }
                         }
-                      }
-                    }}
-                  />
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
             );
@@ -822,7 +881,20 @@ export const PreviewWorkspace: React.FC<PreviewWorkspaceProps> = ({
             </div>
 
             <div className="flex-1 overflow-hidden">
-              <InspectorApp isSidepanel={true} />
+              <InspectorApp
+                isSidepanel={true}
+                visualModesState={visualModes}
+                onVisualModesChange={(newModes) => {
+                  setVisualModes(newModes);
+                  saveStoredVisualModes(newModes);
+                  iframeRefs.current.forEach((frame) => {
+                    frame.contentWindow?.postMessage({ action: 'SET_XRAY', payload: { enabled: newModes.xrayEnabled } }, '*');
+                    frame.contentWindow?.postMessage({ action: 'SET_GRID', payload: { enabled: newModes.gridEnabled, config: newModes.gridConfig } }, '*');
+                    frame.contentWindow?.postMessage({ action: 'SET_DARK_THEME', payload: { mode: newModes.darkThemeMode } }, '*');
+                    frame.contentWindow?.postMessage({ action: 'SET_COLOR_BLINDNESS', payload: { type: newModes.colorBlindness } }, '*');
+                  });
+                }}
+              />
             </div>
           </aside>
         )}

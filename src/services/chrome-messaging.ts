@@ -65,6 +65,21 @@ export async function ensureContentScriptInjected(tabId: number): Promise<boolea
 export async function sendMessageToActiveTab<T = unknown>(
   message: ExtensionMessage
 ): Promise<ExtensionResponse<T>> {
+  // If running directly inside workspace.html, broadcast directly to all canvas iframes
+  if (typeof window !== 'undefined' && (window.location.pathname.includes('workspace.html') || document.querySelector('iframe'))) {
+    const iframes = Array.from(document.querySelectorAll('iframe'));
+    if (iframes.length > 0) {
+      iframes.forEach((iframe) => {
+        try {
+          iframe.contentWindow?.postMessage(message, '*');
+        } catch {
+          // Cross-origin safe
+        }
+      });
+      return { success: true };
+    }
+  }
+
   const tab = await getActiveTab();
   if (!tab || !tab.id) {
     return { success: false, error: 'No active tab found. Please switch to a browser tab with a website open.' };
@@ -72,6 +87,17 @@ export async function sendMessageToActiveTab<T = unknown>(
 
   // Prevent messaging browser internal pages where Chrome forbids content script injection
   if (isRestrictedUrl(tab.url)) {
+    // If it's the workspace tab itself, broadcast to child iframes
+    if (tab.url && tab.url.includes('workspace.html')) {
+      const iframes = Array.from(document.querySelectorAll('iframe'));
+      iframes.forEach((iframe) => {
+        try {
+          iframe.contentWindow?.postMessage(message, '*');
+        } catch {}
+      });
+      return { success: true };
+    }
+
     return {
       success: false,
       error: 'Cannot inspect browser internal pages (chrome://, about:, extensions). Open any regular webpage (e.g. localhost or a website) to inspect.',

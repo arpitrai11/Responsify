@@ -37,9 +37,15 @@ import {
 
 interface InspectorAppProps {
   isSidepanel?: boolean;
+  visualModesState?: VisualModesState;
+  onVisualModesChange?: (modes: VisualModesState) => void;
 }
 
-export const InspectorApp: React.FC<InspectorAppProps> = ({ isSidepanel = false }) => {
+export const InspectorApp: React.FC<InspectorAppProps> = ({
+  isSidepanel = false,
+  visualModesState: propVisualModes,
+  onVisualModesChange,
+}) => {
   // Theme state
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
@@ -59,13 +65,21 @@ export const InspectorApp: React.FC<InspectorAppProps> = ({ isSidepanel = false 
   const [selectedUserAgent, setSelectedUserAgent] = useState<string | null>(null);
 
   // Visual Modes
-  const [visualModes, setVisualModes] = useState<VisualModesState>({
-    xrayEnabled: false,
-    gridEnabled: false,
-    gridConfig: DEFAULT_GRID_CONFIG,
-    darkThemeMode: 'disabled',
-    colorBlindness: 'none',
-  });
+  const [visualModes, setVisualModes] = useState<VisualModesState>(
+    propVisualModes || {
+      xrayEnabled: false,
+      gridEnabled: false,
+      gridConfig: DEFAULT_GRID_CONFIG,
+      darkThemeMode: 'disabled',
+      colorBlindness: 'none',
+    }
+  );
+
+  useEffect(() => {
+    if (propVisualModes) {
+      setVisualModes(propVisualModes);
+    }
+  }, [propVisualModes]);
 
   // Assets & History
   const [assets, setAssets] = useState<PageAsset[]>([]);
@@ -92,8 +106,11 @@ export const InspectorApp: React.FC<InspectorAppProps> = ({ isSidepanel = false 
     getStoredHistory().then(setHistory);
     getStoredVisualModes().then(setVisualModes);
 
-    // Check active tab status
+    // Check active tab status (skip false-alarm banner when inside Studio workspace)
     getActiveTab().then((tab) => {
+      if (typeof window !== 'undefined' && window.location.pathname.includes('workspace.html')) {
+        return;
+      }
       if (tab && tab.url && (tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://') || tab.url.startsWith('edge://') || tab.url.startsWith('about:'))) {
         setGlobalNotice('Notice: You are on a browser internal page (' + tab.url.split('/')[2] + '). Chrome restricts extensions from injecting scripts into internal pages. Open any regular website (e.g. google.com or localhost) to inspect elements.');
       }
@@ -112,11 +129,9 @@ export const InspectorApp: React.FC<InspectorAppProps> = ({ isSidepanel = false 
     }
   };
 
-  // 2. Chrome Runtime Message Listener (for element selection from page)
+  // 2. Message Listeners (supports both Chrome tabs and workspace canvas iframes)
   useEffect(() => {
-    if (typeof chrome === 'undefined' || !chrome.runtime || !chrome.runtime.onMessage) return;
-
-    const listener = (msg: ExtensionMessage) => {
+    const runtimeListener = (msg: ExtensionMessage) => {
       if (msg.action === 'ELEMENT_SELECTED') {
         const info = msg.payload as ElementInfo;
         setSelectedElement(info);
@@ -126,9 +141,33 @@ export const InspectorApp: React.FC<InspectorAppProps> = ({ isSidepanel = false 
       }
     };
 
-    chrome.runtime.onMessage.addListener(listener);
+    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
+      chrome.runtime.onMessage.addListener(runtimeListener);
+    }
+
+    const windowListener = (event: MessageEvent) => {
+      if (!event.data || !event.data.action) return;
+      if (event.data.action === 'ELEMENT_SELECTED') {
+        const info = event.data.payload as ElementInfo;
+        setSelectedElement(info);
+        setIsPicking(false);
+      } else if (event.data.action === 'STOP_PICKER') {
+        setIsPicking(false);
+      } else if (event.data.action === 'ASSETS_DISCOVERED') {
+        const discovered = event.data.payload as PageAsset[];
+        if (Array.isArray(discovered)) {
+          setAssets(discovered);
+          setIsAssetsLoading(false);
+        }
+      }
+    };
+    window.addEventListener('message', windowListener);
+
     return () => {
-      chrome.runtime.onMessage.removeListener(listener);
+      if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
+        chrome.runtime.onMessage.removeListener(runtimeListener);
+      }
+      window.removeEventListener('message', windowListener);
     };
   }, []);
 
@@ -341,6 +380,9 @@ export const InspectorApp: React.FC<InspectorAppProps> = ({ isSidepanel = false 
   const handleVisualModesChange = async (newModes: VisualModesState) => {
     setVisualModes(newModes);
     saveStoredVisualModes(newModes);
+    if (onVisualModesChange) {
+      onVisualModesChange(newModes);
+    }
 
     // Send actions to page
     if (newModes.xrayEnabled !== visualModes.xrayEnabled) {

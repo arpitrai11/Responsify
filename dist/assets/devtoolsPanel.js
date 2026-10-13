@@ -1,1 +1,1 @@
-import"./modulepreload-polyfill-B5Qt9EMX.js";import{R as t,j as e,a as r,I as o}from"./InspectorApp-BSeFZlIt.js";t.createRoot(document.getElementById("root")).render(e.jsx(r.StrictMode,{children:e.jsx(o,{isSidepanel:!0})}));
+import"./modulepreload-polyfill-B5Qt9EMX.js";import{R as t,j as e,a as r,I as o}from"./InspectorApp-Bs6_ym4r.js";t.createRoot(document.getElementById("root")).render(e.jsx(r.StrictMode,{children:e.jsx(o,{isSidepanel:!0})}));

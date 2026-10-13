@@ -55,19 +55,33 @@ function onClick(e: MouseEvent) {
     stopPicker();
 
     // Send selection to popup/sidepanel
-    chrome.runtime.sendMessage({
+    chrome.runtime?.sendMessage?.({
       action: 'ELEMENT_SELECTED',
       payload: extractElementInfo(target),
     }).catch(() => {
       // Listener might not be open, that's normal
     });
+
+    // Also notify parent window (Responsive Studio workspace)
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage(
+        {
+          action: 'ELEMENT_SELECTED',
+          payload: extractElementInfo(target),
+        },
+        '*'
+      );
+    }
   }
 }
 
 function onKeyDown(e: KeyboardEvent) {
   if (e.key === 'Escape' && isPickerActive) {
     stopPicker();
-    chrome.runtime.sendMessage({ action: 'STOP_PICKER' }).catch(() => {});
+    chrome.runtime?.sendMessage?.({ action: 'STOP_PICKER' }).catch(() => {});
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ action: 'STOP_PICKER' }, '*');
+    }
   }
 }
 
@@ -483,14 +497,110 @@ chrome.runtime.onMessage.addListener(
   }
 );
 
-// Cross-origin iframe postMessage listener for smooth Ctrl+scroll & synchronized scrolling
+// Cross-origin iframe postMessage listener for workspace studio integration & live inspection
 window.addEventListener('message', (event) => {
-  if (!event.data) return;
-  if (event.data.action === 'SYNC_SCROLL_DELTA') {
-    window.scrollBy({ top: event.data.deltaY || 0, behavior: 'auto' });
-  } else if (event.data.action === 'SYNC_SCROLL_PERCENT') {
-    const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-    window.scrollTo({ top: (event.data.percent || 0) * maxScroll, behavior: 'auto' });
+  if (!event.data || !event.data.action) return;
+  const { action, payload } = event.data;
+
+  switch (action) {
+    case 'SYNC_SCROLL_DELTA': {
+      const delta = typeof payload?.deltaY === 'number' ? payload.deltaY : event.data.deltaY || 0;
+      window.scrollBy({ top: delta, behavior: 'auto' });
+      break;
+    }
+
+    case 'SYNC_SCROLL_PERCENT': {
+      const pct = typeof payload?.percent === 'number' ? payload.percent : event.data.percent || 0;
+      const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+      window.scrollTo({ top: pct * maxScroll, behavior: 'auto' });
+      break;
+    }
+
+    case 'START_PICKER':
+      startPicker();
+      break;
+
+    case 'STOP_PICKER':
+      stopPicker();
+      break;
+
+    case 'CLEAR_SELECTION':
+      clearSelection();
+      break;
+
+    case 'APPLY_CSS':
+      if (payload && payload.selector && payload.property) {
+        applyCss(payload.selector, payload.property, payload.value);
+      }
+      break;
+
+    case 'REMOVE_CSS':
+      if (payload && payload.selector && payload.property) {
+        removeCss(payload.selector, payload.property);
+      }
+      break;
+
+    case 'RESET_ELEMENT_CSS':
+      if (payload && payload.selector) {
+        resetElementCss(payload.selector);
+      }
+      break;
+
+    case 'UPDATE_TEXT':
+      if (payload && payload.selector) {
+        updateText(payload.selector, payload.text);
+      }
+      break;
+
+    case 'RESET_TEXT':
+      if (payload && payload.selector) {
+        resetText(payload.selector);
+      }
+      break;
+
+    case 'UPDATE_IMAGE':
+      if (payload && payload.selector && payload.src) {
+        updateImage(payload.selector, payload.src);
+      }
+      break;
+
+    case 'RESET_IMAGE':
+      if (payload && payload.selector) {
+        resetImage(payload.selector);
+      }
+      break;
+
+    case 'SET_XRAY':
+      if (payload) {
+        setXrayMode(Boolean(payload.enabled));
+      }
+      break;
+
+    case 'SET_GRID':
+      if (payload) {
+        setGridOverlay(Boolean(payload.enabled), payload.config);
+      }
+      break;
+
+    case 'SET_DARK_THEME':
+      if (payload) {
+        setDarkThemeSimulation(payload.mode);
+      }
+      break;
+
+    case 'SET_COLOR_BLINDNESS':
+      if (payload) {
+        setColorBlindnessFilter(payload.type);
+      }
+      break;
+
+    case 'DISCOVER_ASSETS': {
+      const assets = discoverPageAssets();
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ action: 'ASSETS_DISCOVERED', payload: assets }, '*');
+      }
+      break;
+    }
   }
 });
 
